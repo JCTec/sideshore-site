@@ -1,0 +1,544 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sideshore — Wind forecast &amp; live stations</title>
+<meta name="description" content="Every spot's next good window: GO, MARGINAL or NO with the rule that decided it, every model side by side and the live station. Free, no account, no ads.">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#F2F2F0" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#121212" media="(prefers-color-scheme: dark)">
+<!-- Smart App Banner: uncomment once the App Store Connect Apple ID exists (same value as APP_ID below). -->
+<!-- <meta name="apple-itunes-app" content="app-id=0000000000"> -->
+<meta property="og:type" content="website">
+<meta property="og:title" content="Sideshore — Wind forecast & live stations">
+<meta property="og:description" content="A quiet wind desk: spots, models that argue in the open, live stations, and a go/no that respects gusts, shore angle and storms.">
+<meta property="og:image" content="https://jctec.github.io/sideshore-site/assets/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" type="image/png" href="assets/favicon-64.png">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<style>
+/* Wind Desk tokens: values copied from Sideshore's asset catalog (dsPaper, dsInk, dsMuted, dsWindSideshore0…7). */
+:root {
+  --paper:#F2F2F0; --surface:#FAFAF8; --sunken:#E3E3E0; --ink:#111111; --on-ink:#F2F2F0;
+  --muted:#5C5C5A; --hairline:#C9C9C5; --accent:#1F5FAE; --safety:#C92A10; --on-safety:#FFFFFF;
+  --w0:#6AABBB; --w1:#378AB8; --w2:#1874BF; --w3:#155CC5; --w4:#314AA4; --w5:#353B81; --w6:#2F2C5D; --w7:#211C39;
+  --on-w-lo:#111111; --on-w-hi:#FFFFFF;
+  --rule:2px; --gutter:16px; --max:1200px;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper:#121212; --surface:#1C1C1C; --sunken:#2B2B2B; --ink:#F2F2F0; --on-ink:#121212;
+    --muted:#A3A3A0; --hairline:#3C3C3A; --accent:#86B5E8; --safety:#FF4A2B; --on-safety:#111111;
+    --w0:#70709A; --w1:#7E8CD7; --w2:#6D9DFF; --w3:#6CB3FE; --w4:#75C8FD; --w5:#86DCFE; --w6:#A9EEFE; --w7:#DDFDFE;
+    --on-w-lo:#111111; --on-w-hi:#111111;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper:#121212; --surface:#1C1C1C; --sunken:#2B2B2B; --ink:#F2F2F0; --on-ink:#121212;
+  --muted:#A3A3A0; --hairline:#3C3C3A; --accent:#86B5E8; --safety:#FF4A2B; --on-safety:#111111;
+  --w0:#70709A; --w1:#7E8CD7; --w2:#6D9DFF; --w3:#6CB3FE; --w4:#75C8FD; --w5:#86DCFE; --w6:#A9EEFE; --w7:#DDFDFE;
+  --on-w-lo:#111111; --on-w-hi:#111111;
+  color-scheme: dark;
+}
+@media (min-width: 720px) { :root { --gutter:32px; } }
+
+*, *::before, *::after { box-sizing:border-box; border-radius:0; }
+html { -webkit-text-size-adjust:100%; }
+body {
+  margin:0; background:var(--paper); color:var(--ink);
+  font:17px/1.5 -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, "Segoe UI", sans-serif;
+  font-variant-numeric: tabular-nums; -webkit-font-smoothing:antialiased; overflow-x:hidden;
+}
+img { display:block; max-width:100%; height:auto; }
+a { color:inherit; }
+:focus-visible { outline:var(--rule) solid var(--ink); outline-offset:3px; }
+.wrap { max-width:var(--max); margin:0 auto; padding:0 var(--gutter); }
+
+/* The Wind Desk header rule: a short ramp-blue stretch that runs on in ink. */
+.rule { height:var(--rule); background:linear-gradient(90deg, var(--accent) 0 var(--lead, 16%), var(--ink) var(--lead, 16%)); border:0; margin:0; }
+.rule.plain { background:var(--ink); }
+.eyebrow { margin:0; font-size:13px; font-weight:600; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); }
+.muted { color:var(--muted); }
+.visually-hidden { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
+
+/* Top bar */
+.top { position:sticky; top:0; z-index:5; background:var(--paper); }
+.top .wrap { display:flex; align-items:center; justify-content:space-between; gap:16px; min-height:64px; }
+.brand { display:flex; align-items:center; gap:12px; text-decoration:none; font-weight:700; font-size:19px; letter-spacing:-.01em; }
+.brand img { width:32px; height:32px; outline:var(--rule) solid var(--ink); outline-offset:0; }
+
+/* Store buttons. Swap for Apple's official badges (tools.applemarketingtools.com) before launch; keep the classes. */
+.cta { display:flex; flex-wrap:wrap; align-items:center; gap:12px 20px; }
+.store { display:inline-flex; flex-direction:column; justify-content:center; min-height:48px; padding:6px 18px 7px; text-decoration:none;
+  background:var(--ink); color:var(--on-ink); border:var(--rule) solid var(--ink); line-height:1.15; }
+.store small { font-size:11px; font-weight:500; letter-spacing:.02em; }
+.store span { font-size:18px; font-weight:700; letter-spacing:-.01em; }
+.store:hover { background:var(--paper); color:var(--ink); }
+.store.secondary { background:none; color:var(--ink); border:0; padding:0; min-height:44px; flex-direction:row; align-items:center; gap:.35em;
+  text-decoration:underline; text-underline-offset:3px; text-decoration-thickness:1px; }
+.store.secondary small, .store.secondary span { font-size:15px; font-weight:600; letter-spacing:0; }
+.store.secondary small { display:none; }
+.store.secondary::before { content:"Also on"; font-size:15px; font-weight:400; }
+.store.secondary span { white-space:nowrap; }
+.store[hidden] { display:none; }
+.top .store { min-height:40px; padding:4px 12px 5px; }
+.top .store small { font-size:10px; }
+.top .store span { font-size:15px; }
+.top .store.secondary { display:none; }
+.cta-note { margin:14px 0 0; font-size:15px; }
+
+/* Hero, with the live particle field behind it. */
+.hero { position:relative; overflow:hidden; border-bottom:var(--rule) solid var(--ink); }
+.field { position:absolute; inset:0; width:100%; height:100%; display:block; }
+.hero .wrap { position:relative; display:grid; grid-template-columns:minmax(0,1fr); gap:40px; padding-top:56px; padding-bottom:56px; }
+.plate { background:var(--paper); padding:20px var(--gutter); margin:0 calc(-1 * var(--gutter)); }
+@media (min-width: 900px) { .plate { padding:28px 32px; margin:0 -32px; } }
+.hero h1 { margin:10px 0 4px; font-size:clamp(56px, 11vw, 132px); line-height:.92; font-weight:800; letter-spacing:-.045em; }
+.hero .sub { margin:0 0 20px; font-size:clamp(20px, 2.4vw, 26px); font-weight:600; letter-spacing:-.01em; }
+.hero .lede { margin:0 0 28px; max-width:30em; font-size:clamp(18px, 1.9vw, 21px); line-height:1.45; color:var(--muted); }
+.shots { display:flex; gap:20px; align-items:flex-start; justify-content:center; }
+.shot { border:var(--rule) solid var(--ink); background:var(--ink); }
+.shots .shot { width:min(46%, 250px); }
+.shots .shot:nth-child(2) { margin-top:56px; }
+.legend { position:relative; justify-self:start; display:flex; align-items:center; gap:10px; background:var(--paper); padding:8px 10px; font-size:12px; }
+.legend .ramp { display:flex; }
+.legend .ramp i { width:22px; height:10px; display:block; }
+.legend .ticks { display:flex; font-size:11px; color:var(--muted); }
+.legend .ticks span { width:22px; }
+@media (min-width: 900px) {
+  .hero .wrap { grid-template-columns: minmax(0,7fr) minmax(0,5fr); align-items:center; padding-top:88px; padding-bottom:72px; }
+  .legend { grid-column:1 / -1; }
+  .shots { justify-content:flex-end; }
+}
+@media (max-width: 519px) { .shots .shot:nth-child(2) { display:none; } .shots .shot { width:70%; } }
+
+/* Hourly strip: the all-spots matrix row for Event Site, demo day. */
+.strip { padding:48px 0; border-bottom:var(--rule) solid var(--ink); }
+.strip header { display:flex; flex-wrap:wrap; justify-content:space-between; gap:8px 24px; align-items:baseline; margin-bottom:16px; }
+.strip h2 { margin:4px 0 0; font-size:22px; letter-spacing:-.01em; }
+.scroller { overflow-x:auto; padding-bottom:4px; }
+.hours { display:grid; grid-template-columns:repeat(16, minmax(44px, 1fr)); gap:2px; min-width:720px; }
+.hours div { text-align:center; }
+.hours .h { font-size:13px; color:var(--muted); padding-bottom:6px; }
+.hours .c { padding:10px 0; font-weight:700; font-size:17px; position:relative; }
+.hours .c.win { box-shadow:inset 0 0 0 2px var(--paper); outline:var(--rule) solid var(--ink); outline-offset:0; z-index:1; }
+.c.b0 { background:var(--w0); color:var(--on-w-lo); } .c.b1 { background:var(--w1); color:var(--on-w-lo); }
+.c.b2 { background:var(--w2); color:var(--on-w-hi); } .c.b3 { background:var(--w3); color:var(--on-w-hi); }
+.c.b4 { background:var(--w4); color:var(--on-w-hi); }
+.strip .key { display:flex; flex-wrap:wrap; gap:6px 20px; margin-top:14px; font-size:14px; color:var(--muted); }
+.strip .key b { color:var(--ink); }
+.swatch-win { display:inline-block; width:14px; height:14px; outline:var(--rule) solid var(--ink); outline-offset:-2px; vertical-align:-2px; margin-right:6px; }
+
+/* Feature rows */
+.feature { padding:64px 0; border-bottom:var(--rule) solid var(--ink); }
+.feature .wrap { display:grid; grid-template-columns:minmax(0,1fr); gap:32px; align-items:center; }
+.feature h2 { margin:10px 0 12px; font-size:clamp(30px, 4.2vw, 48px); line-height:1.05; letter-spacing:-.03em; font-weight:800; }
+.feature p.body { margin:0; font-size:19px; color:var(--muted); max-width:28em; }
+.feature .rule { margin-bottom:18px; width:120px; --lead:40%; }
+.feature figure { margin:0; }
+.feature figure .shot { margin-left:auto; margin-right:auto; }
+.feature .portrait { max-width:min(100%, 460px); }
+@media (min-width: 900px) {
+  .feature .wrap { grid-template-columns: minmax(0,5fr) minmax(0,7fr); gap:64px; }
+  .feature.flip .copy { order:2; }
+  .feature.flip figure { order:1; }
+}
+
+/* Verdict block */
+.verdicts { padding:64px 0; border-bottom:var(--rule) solid var(--ink); }
+.verdicts h2 { margin:10px 0 28px; font-size:clamp(30px, 4.2vw, 48px); line-height:1.05; letter-spacing:-.03em; font-weight:800; max-width:16em; }
+.vgrid { display:grid; gap:0; border-top:var(--rule) solid var(--ink); }
+.vrow { display:grid; grid-template-columns:132px 1fr; gap:16px; align-items:start; padding:18px 0; border-bottom:1px solid var(--hairline); }
+.chip { display:inline-block; justify-self:start; font-size:14px; font-weight:800; letter-spacing:.06em; padding:3px 9px; border:var(--rule) solid var(--ink); }
+.chip.go { background:var(--ink); color:var(--on-ink); }
+.chip.marginal { background:none; color:var(--ink); }
+.chip.no-safety { background:var(--safety); border-color:var(--safety); color:var(--on-safety); }
+.chip.no-light { background:none; color:var(--muted); border-color:var(--muted); text-decoration:line-through; text-decoration-thickness:2px; }
+.vrow p { margin:0; font-size:18px; }
+.vrow p .muted { display:block; font-size:15px; }
+.verdicts .closing { margin:24px 0 0; font-size:19px; font-weight:600; max-width:32em; }
+
+/* Sports + privacy */
+.duo { padding:64px 0; border-bottom:var(--rule) solid var(--ink); }
+.duo .wrap { display:grid; grid-template-columns:minmax(0,1fr); gap:48px; }
+@media (min-width: 900px) { .duo .wrap { grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:64px; } }
+.duo h2 { margin:10px 0 18px; font-size:clamp(26px, 3.2vw, 36px); letter-spacing:-.025em; font-weight:800; line-height:1.1; }
+.segments { display:flex; flex-wrap:wrap; gap:0; margin:0 0 14px; padding:0; list-style:none; }
+.segments li { border:1px solid var(--ink); margin:0 -1px -1px 0; padding:8px 14px; font-weight:600; font-size:16px; }
+.segments li:first-child { background:var(--ink); color:var(--on-ink); }
+.duo p { margin:0; font-size:18px; color:var(--muted); }
+
+/* Final CTA with a band of the same field. */
+.final { position:relative; overflow:hidden; border-bottom:var(--rule) solid var(--ink); }
+.final .band { position:relative; height:180px; }
+.final .wrap { padding-top:48px; padding-bottom:64px; }
+.final h2 { margin:10px 0 24px; font-size:clamp(34px, 5vw, 60px); letter-spacing:-.035em; font-weight:800; line-height:1; }
+
+footer { padding:40px 0 56px; font-size:14px; color:var(--muted); }
+footer .wrap { display:grid; gap:14px; }
+footer nav { display:flex; flex-wrap:wrap; gap:8px 24px; }
+footer nav a { color:var(--ink); }
+footer p { margin:0; max-width:52em; }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="#top" aria-label="Sideshore, top of page">
+      <img src="assets/app-icon.png" alt="" width="32" height="32">Sideshore
+    </a>
+    <div class="cta" data-cta></div>
+  </div>
+  <hr class="rule" aria-hidden="true">
+</header>
+
+<main id="top">
+  <section class="hero" aria-labelledby="hero-title">
+    <canvas class="field" data-field aria-hidden="true"></canvas>
+    <div class="wrap">
+      <div class="plate">
+        <p class="eyebrow">iPadOS 26 · iOS 26 · macOS 26</p>
+        <h1 id="hero-title">Sideshore</h1>
+        <p class="sub">Wind forecast &amp; live stations</p>
+        <p class="lede">A quiet wind desk: spots, models that argue in the open, live stations, and a go/no that respects gusts, shore angle and storms.</p>
+        <div class="cta" data-cta>
+          <a class="store store-ios" href="https://apps.apple.com/" data-store="ios"><small>Download on the</small><span>App Store</span></a>
+          <a class="store store-mac secondary" href="https://apps.apple.com/" data-store="mac"><small>Download on the</small><span>Mac App Store</span></a>
+        </div>
+        <p class="cta-note muted">Free · No account · No ads</p>
+      </div>
+      <div class="shots">
+        <img class="shot" src="assets/iphone-01-home.jpg" width="506" height="1100" alt="Session on iPhone: six spots sorted by verdict, Event Site and The Hatchery GO, Rufus NO for lightning from 16:00.">
+        <img class="shot" src="assets/iphone-04-iphone-map.jpg" width="506" height="1100" alt="Map on iPhone: the wind field over the Columbia River Gorge with spot pins and the hour scrubber.">
+      </div>
+      <div class="legend" aria-hidden="true">
+        <span class="eyebrow" style="font-size:11px">Wind · kn</span>
+        <div>
+          <div class="ramp"><i style="background:var(--w0)"></i><i style="background:var(--w1)"></i><i style="background:var(--w2)"></i><i style="background:var(--w3)"></i><i style="background:var(--w4)"></i><i style="background:var(--w5)"></i><i style="background:var(--w6)"></i><i style="background:var(--w7)"></i></div>
+          <div class="ticks"><span>0</span><span>8</span><span>12</span><span>16</span><span>20</span><span>25</span><span>30</span><span>35+</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="strip" aria-labelledby="strip-title">
+    <div class="wrap">
+      <header>
+        <div>
+          <p class="eyebrow">All spots · Today 06–21</p>
+          <h2 id="strip-title">Event Site <span class="chip go" style="font-size:12px;vertical-align:4px;margin-left:6px">GO</span></h2>
+        </div>
+        <p class="muted" style="margin:0;font-size:15px">Hood River, OR · Kite · beach faces N · Gorge demo, Tue 29 Sep</p>
+      </header>
+      <div class="scroller" role="region" aria-label="Event Site hourly wind, knots, 06:00 to 21:00" tabindex="0">
+        <div class="hours">
+          <div class="h">06</div><div class="h">07</div><div class="h">08</div><div class="h">09</div><div class="h">10</div><div class="h">11</div><div class="h">12</div><div class="h">13</div><div class="h">14</div><div class="h">15</div><div class="h">16</div><div class="h">17</div><div class="h">18</div><div class="h">19</div><div class="h">20</div><div class="h">21</div>
+          <div class="c b0">6</div><div class="c b0">7</div><div class="c b1">9</div><div class="c b1">11</div><div class="c b2">13</div><div class="c b2">15</div><div class="c b3">17</div><div class="c b3 win">19</div><div class="c b4 win">21</div><div class="c b4 win">22</div><div class="c b4 win">23</div><div class="c b4 win">22</div><div class="c b4 win">20</div><div class="c b3">17</div><div class="c b2">14</div><div class="c b1">11</div>
+        </div>
+      </div>
+      <div class="key"><span><span class="swatch-win"></span>Next good window <b>13:00–19:00</b></span><span>Station <b>21g27</b> · 0.4 mi · 2 min</span><span>Models <b>19g24</b> · spread 3 kn</span></div>
+    </div>
+  </section>
+
+  <section class="feature" aria-labelledby="f1">
+    <div class="wrap">
+      <div class="copy">
+        <hr class="rule" aria-hidden="true">
+        <p class="eyebrow">Session · Verdict</p>
+        <h2 id="f1">Why the verdict is what it is.</h2>
+        <p class="body">The rules that decided it, the next 48 hours and every spot's day, side by side.</p>
+      </div>
+      <figure><img class="shot" loading="lazy" src="assets/mac-01-session.jpg" width="1800" height="1351" alt="Session on Mac: your spots with verdicts on the left; Event Site GO with its next good window 13:00–19:00, live station 21 gusting 27 knots, the 48-hour model consensus chart, the safety strip and the rules that passed."></figure>
+    </div>
+  </section>
+
+  <section class="feature flip" aria-labelledby="f2">
+    <div class="wrap">
+      <div class="copy">
+        <hr class="rule" aria-hidden="true">
+        <p class="eyebrow">Spot · Event Site</p>
+        <h2 id="f2">Every model, with its spread drawn.</h2>
+        <p class="body">The live station against the forecast, with the hourly table, webcam and notes.</p>
+      </div>
+      <figure><img class="shot portrait" loading="lazy" src="assets/ipad-03-spot.jpg" width="1350" height="1800" alt="Spot on iPad: Event Site's live reading and verdict, the hourly table, the model graph with its spread, the map and the webcam."></figure>
+    </div>
+  </section>
+
+  <section class="feature" aria-labelledby="f3">
+    <div class="wrap">
+      <div class="copy">
+        <hr class="rule" aria-hidden="true">
+        <p class="eyebrow">Map · Inspector</p>
+        <h2 id="f3">The wind field, hour by hour.</h2>
+        <p class="body">Scrub or play 48 hours, then tap a spot to inspect it without leaving the map.</p>
+      </div>
+      <figure><img class="shot" loading="lazy" src="assets/mac-02-map.jpg" width="1800" height="1351" alt="Map on Mac: the full-bleed wind field with layer chips, spot pins carrying verdicts, the playhead and the inspector open on a spot."></figure>
+    </div>
+  </section>
+
+  <section class="feature flip" aria-labelledby="f4">
+    <div class="wrap">
+      <div class="copy">
+        <hr class="rule" aria-hidden="true">
+        <p class="eyebrow">Alerts · Compose</p>
+        <h2 id="f4">Test an alert before you save it.</h2>
+        <p class="body">How often it would have fired in 30 days, then a heads-up the evening before.</p>
+      </div>
+      <figure><img class="shot portrait" loading="lazy" src="assets/ipad-05-alerts.jpg" width="1350" height="1800" alt="Alert compose sheet on iPad: every condition on one sheet, with a preview of how often the alert would have fired in the last 30 days."></figure>
+    </div>
+  </section>
+
+  <section class="verdicts" aria-labelledby="v-title">
+    <div class="wrap">
+      <p class="eyebrow">A go/no you can read</p>
+      <h2 id="v-title">The rules run in order. The first hard fail wins.</h2>
+      <div class="vgrid">
+        <div class="vrow"><span class="chip no-safety">NO</span><p>Offshore, a storm in the window, or wind over your maximum.<span class="muted">Storm: lightning chance 10% or more, or CAPE 800 J/kg or more.</span></p></div>
+        <div class="vrow"><span class="chip no-light">NO</span><p>Too light for your range.</p></div>
+        <div class="vrow"><span class="chip marginal">MARGINAL</span><p>Gusts at 1.5× the mean wind or more, or models more than 5 kn apart.</p></div>
+        <div class="vrow"><span class="chip go">GO</span><p>In range, not offshore, no storm.</p></div>
+      </div>
+      <p class="closing">No score, no hidden weighting. A missing value shows a dash and why, never a guess.</p>
+    </div>
+  </section>
+
+  <section class="duo">
+    <div class="wrap">
+      <div>
+        <p class="eyebrow">For every wind sport</p>
+        <h2>Each sport brings its own range.</h2>
+        <ul class="segments" aria-label="Sports">
+          <li>Kite</li><li>Wing/Foil</li><li>Windsurf</li><li>Surf</li><li>Sail</li><li>Para</li>
+        </ul>
+        <p>Or choose “Just show me the wind”: wind, gusts and storm warnings, with no verdicts.</p>
+      </div>
+      <div>
+        <p class="eyebrow">Private by design</p>
+        <h2>No account, no ads, no tracking, no server.</h2>
+        <p>Your spots, profiles, alerts and notes stay on your device. Weather requests carry a spot's coordinates, never your location.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="final" aria-labelledby="final-title">
+    <div class="band"><canvas class="field" data-field aria-hidden="true"></canvas></div>
+    <hr class="rule" aria-hidden="true">
+    <div class="wrap">
+      <p class="eyebrow">iPhone · iPad · Mac</p>
+      <h2 id="final-title">Read the wind before you rig.</h2>
+      <div class="cta" data-cta>
+        <a class="store store-ios" href="https://apps.apple.com/" data-store="ios"><small>Download on the</small><span>App Store</span></a>
+        <a class="store store-mac secondary" href="https://apps.apple.com/" data-store="mac"><small>Download on the</small><span>Mac App Store</span></a>
+      </div>
+      <p class="cta-note muted">Free · No account · No ads · One purchase across iPhone, iPad and Mac</p>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <nav aria-label="Footer">
+      <a href="privacy/">Privacy</a>
+      <a href="support/">Support</a>
+      <a href="https://open-meteo.com/" rel="noopener">Weather data by Open-Meteo.com (CC BY 4.0)</a>
+    </nav>
+    <p>Not for navigation. Forecasts and stations can be wrong and conditions change fast. You decide whether it's safe to ride.</p>
+    <p>© 2026 Juan Carlos Estévez Rodríguez (JCTec)</p>
+  </div>
+</footer>
+
+<script>
+"use strict";
+// ---------------------------------------------------------------------------------------------
+// Store links. Sideshore is a universal purchase: one Apple ID for iOS, iPadOS and macOS.
+// TODO(G-7): replace with the Apple ID from App Store Connect (App Information ▸ Apple ID).
+const APP_ID = "0000000000";
+const STORE = {
+  ios: `https://apps.apple.com/app/id${APP_ID}`,
+  mac: `https://apps.apple.com/app/id${APP_ID}?platform=mac`,
+};
+
+function detectPlatform() {
+  const ua = navigator.userAgent || "";
+  const platform = (navigator.userAgentData && navigator.userAgentData.platform) || navigator.platform || "";
+  if (/iPhone|iPod/.test(ua)) return "ios";
+  // iPadOS Safari reports itself as a Mac; a touch screen gives it away.
+  if (/iPad/.test(ua) || (/Mac/.test(platform + ua) && navigator.maxTouchPoints > 1)) return "ios";
+  if (/Mac/.test(platform) || /Macintosh/.test(ua)) return "mac";
+  return "other";
+}
+
+(function wireStores() {
+  const platform = detectPlatform();
+  document.documentElement.dataset.platform = platform;
+  const primary = platform === "mac" ? "mac" : "ios";
+  document.querySelectorAll("a[data-store]").forEach((a) => {
+    const store = a.dataset.store;
+    a.href = STORE[store];
+    const name = store === "mac" ? "the Mac App Store" : "the App Store";
+    a.setAttribute("aria-label", `Download Sideshore on ${name}`);
+    // Elsewhere (Windows, Android, Linux) both stores show as buttons.
+    a.classList.toggle("secondary", platform !== "other" && store !== primary);
+  });
+  document.querySelectorAll("[data-cta]").forEach((cta) => {
+    const ios = cta.querySelector('[data-store="ios"]');
+    const mac = cta.querySelector('[data-store="mac"]');
+    if (ios && mac && primary === "mac") cta.insertBefore(mac, ios);
+  });
+  // The top bar gets a copy of the primary button only.
+  const top = document.querySelector(".top [data-cta]");
+  const source = document.querySelector(`.hero [data-store="${primary}"]`);
+  if (top && source) {
+    const copy = source.cloneNode(true);
+    copy.classList.remove("secondary");
+    top.appendChild(copy);
+  }
+})();
+
+// ---------------------------------------------------------------------------------------------
+// The wind particle field: a port of Sideshore's WindParticleSpec / ParticleSimulation (ADR 0021,
+// board 08). Same numbers: life 1.2–3 s, 250 ms fade, one particle per 30×30 pt, at most 3000,
+// 4 pt/s per m/s, a 0.4 s trail drawn as a 2 pt round streak in the WindRamp bin of its wind,
+// batched into one path per bin and opacity step. The wind is a synthetic westerly funnelled
+// through a gorge, so the streaks run the whole ramp.
+const SPEC = {
+  life: [1.2, 3.0], fade: 0.25, density: 1 / 900, maximumCount: 3000,
+  pointsPerSecondPerMeterPerSecond: 4, trail: 0.4, maximumStep: 1 / 15,
+  lineWidth: 2, opacitySteps: 5,
+};
+const THRESHOLDS = [0, 8, 12, 16, 20, 25, 30, 35];
+const KNOTS_PER_MS = 1.943844;
+const binFor = (knots) => {
+  const k = Math.round(knots);
+  for (let i = THRESHOLDS.length - 1; i >= 0; i--) if (k >= THRESHOLDS[i]) return i;
+  return 0;
+};
+const opacityAt = (age, life) => Math.min(Math.max(Math.min(age / SPEC.fade, (life - age) / SPEC.fade), 0), 1);
+const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+const darkScheme = window.matchMedia("(prefers-color-scheme: dark)");
+
+class WindField {
+  constructor(canvas) {
+    this.canvas = canvas;
+    this.ctx = canvas.getContext("2d");
+    this.particles = [];
+    this.t = Math.random() * 100;
+    this.visible = false;
+    this.last = 0;
+    this.frame = this.frame.bind(this);
+    this.readRamp();
+    new ResizeObserver(() => this.resize()).observe(canvas);
+    new IntersectionObserver(([e]) => { this.visible = e.isIntersecting; this.kick(); }).observe(canvas);
+  }
+  readRamp() {
+    const s = getComputedStyle(document.documentElement);
+    this.ramp = THRESHOLDS.map((_, i) => s.getPropertyValue(`--w${i}`).trim());
+  }
+  resize() {
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    this.w = this.canvas.clientWidth; this.h = this.canvas.clientHeight;
+    this.canvas.width = Math.round(this.w * dpr); this.canvas.height = Math.round(this.h * dpr);
+    this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    this.particles = this.particles.filter((p) => p.x <= this.w && p.y <= this.h);
+    if (reduceMotion.matches) this.still(); else this.kick();
+  }
+  // The gorge's centreline wanders and drifts slowly, like the playhead moving through the hours.
+  centre(x) {
+    const ph = this.t * 0.05, w = this.w || 1, h = this.h || 1;
+    // The swing scales with the width too, so a tall narrow field (a phone) still blows west to east.
+    const swing = Math.min(h, w * 0.6);
+    return h * 0.52 + swing * (0.16 * Math.sin((x / w) * Math.PI * 1.5 + ph) + 0.05 * Math.sin((x / w) * Math.PI * 4.1 - ph * 1.6));
+  }
+  // Wind in m/s on screen (x east, y down) and in knots, at a point.
+  wind(x, y) {
+    const yc = this.centre(x), slope = this.centre(x + 1) - yc;
+    const sigma = Math.max(this.h * 0.26, 60);
+    const core = Math.exp(-(((y - yc) / sigma) ** 2));
+    const pulse = 0.82 + 0.18 * Math.sin(x * 0.009 - this.t * 0.7 + y * 0.005);
+    const knots = (4 + 34 * core) * pulse;
+    const wobble = 0.14 * Math.sin(y * 0.018 + this.t * 0.35) * (1 - core);
+    const angle = Math.atan(slope) + wobble;
+    const ms = knots / KNOTS_PER_MS;
+    return { u: Math.cos(angle) * ms, v: Math.sin(angle) * ms, knots };
+  }
+  sample(p) {
+    const { u, v, knots } = this.wind(p.x, p.y);
+    const f = SPEC.pointsPerSecondPerMeterPerSecond;
+    p.vx = u * f; p.vy = v * f; p.bin = binFor(knots);
+  }
+  spawn() {
+    const p = { x: Math.random() * this.w, y: Math.random() * this.h, age: 0,
+      life: SPEC.life[0] + Math.random() * (SPEC.life[1] - SPEC.life[0]) };
+    this.sample(p);
+    return p;
+  }
+  step(seconds) {
+    const dt = Math.min(Math.max(seconds, 0), SPEC.maximumStep);
+    this.t += dt;
+    const next = [];
+    for (const p of this.particles) {
+      p.age += dt;
+      if (p.age >= p.life || p.x < -4 || p.y < -4 || p.x > this.w + 4 || p.y > this.h + 4) continue;
+      p.x += p.vx * dt; p.y += p.vy * dt;
+      this.sample(p);
+      next.push(p);
+    }
+    const target = Math.min(Math.round(this.w * this.h * SPEC.density), SPEC.maximumCount);
+    for (let i = 0; next.length < target && i < target * 2; i++) next.push(this.spawn());
+    this.particles = next;
+  }
+  draw() {
+    const { ctx } = this, steps = SPEC.opacitySteps;
+    ctx.clearRect(0, 0, this.w, this.h);
+    const paths = Array.from({ length: THRESHOLDS.length * steps }, () => new Path2D());
+    const used = new Set();
+    for (const p of this.particles) {
+      const o = opacityAt(p.age, p.life);
+      if (o <= 0) continue;
+      const s = Math.min(Math.max(Math.ceil(o * steps), 1), steps);
+      const i = p.bin * steps + s - 1;
+      paths[i].moveTo(p.x - p.vx * SPEC.trail, p.y - p.vy * SPEC.trail);
+      paths[i].lineTo(p.x, p.y);
+      used.add(i);
+    }
+    ctx.lineWidth = SPEC.lineWidth; ctx.lineCap = "round";
+    for (const i of used) {
+      ctx.globalAlpha = ((i % steps) + 1) / steps;
+      ctx.strokeStyle = this.ramp[Math.floor(i / steps)];
+      ctx.stroke(paths[i]);
+    }
+    ctx.globalAlpha = 1;
+  }
+  frame(now) {
+    this.raf = 0;
+    if (!this.visible || document.hidden || reduceMotion.matches) return;
+    const dt = this.last ? (now - this.last) / 1000 : 0;
+    this.last = now;
+    this.step(dt); this.draw();
+    this.raf = requestAnimationFrame(this.frame);
+  }
+  kick() {
+    if (reduceMotion.matches || !this.w) return;
+    if (!this.raf && this.visible && !document.hidden) { this.last = 0; this.raf = requestAnimationFrame(this.frame); }
+  }
+  // Reduce Motion: one still frame of the field, every streak at full strength.
+  still() {
+    if (!this.w) return;
+    this.particles = [];
+    for (let i = 0; i < 40; i++) this.step(SPEC.maximumStep);
+    for (const p of this.particles) { p.age = SPEC.fade; p.life = SPEC.fade * 3; }
+    this.draw();
+  }
+}
+
+const fields = [...document.querySelectorAll("canvas[data-field]")].map((c) => new WindField(c));
+document.addEventListener("visibilitychange", () => fields.forEach((f) => f.kick()));
+reduceMotion.addEventListener("change", () => fields.forEach((f) => (reduceMotion.matches ? f.still() : f.kick())));
+darkScheme.addEventListener("change", () => fields.forEach((f) => { f.readRamp(); if (reduceMotion.matches) f.still(); }));
+</script>
+</body>
+</html>
