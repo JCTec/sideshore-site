@@ -8,8 +8,7 @@
 <meta name="color-scheme" content="light dark">
 <meta name="theme-color" content="#F2F2F0" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#121212" media="(prefers-color-scheme: dark)">
-<!-- Smart App Banner: uncomment once the App Store Connect Apple ID exists (same value as APP_ID below). -->
-<!-- <meta name="apple-itunes-app" content="app-id=0000000000"> -->
+<meta name="apple-itunes-app" content="app-id=6820650870">
 <meta property="og:type" content="website">
 <meta property="og:title" content="Sideshore — Wind forecast & live stations">
 <meta property="og:description" content="A quiet wind desk: spots, models that argue in the open, live stations, and a go/no that respects gusts, shore angle and storms.">
@@ -206,8 +205,8 @@ footer p { margin:0; max-width:52em; }
         <p class="sub">Wind forecast &amp; live stations</p>
         <p class="lede">A quiet wind desk: spots, models that argue in the open, live stations, and a go/no that respects gusts, shore angle and storms.</p>
         <div class="cta" data-cta>
-          <a class="store store-ios" href="https://apps.apple.com/" data-store="ios"><small>Download on the</small><span>App Store</span></a>
-          <a class="store store-mac secondary" href="https://apps.apple.com/" data-store="mac"><small>Download on the</small><span>Mac App Store</span></a>
+          <a class="store store-ios" href="https://apps.apple.com/app/sideshore/id6820650870" data-store="ios"><small>Download on the</small><span>App Store</span></a>
+          <a class="store store-mac secondary" href="https://apps.apple.com/app/sideshore/id6820650870?platform=mac" data-store="mac"><small>Download on the</small><span>Mac App Store</span></a>
         </div>
         <p class="cta-note muted">Free · No account · No ads</p>
       </div>
@@ -331,8 +330,8 @@ footer p { margin:0; max-width:52em; }
       <p class="eyebrow">iPhone · iPad · Mac</p>
       <h2 id="final-title">Read the wind before you rig.</h2>
       <div class="cta" data-cta>
-        <a class="store store-ios" href="https://apps.apple.com/" data-store="ios"><small>Download on the</small><span>App Store</span></a>
-        <a class="store store-mac secondary" href="https://apps.apple.com/" data-store="mac"><small>Download on the</small><span>Mac App Store</span></a>
+        <a class="store store-ios" href="https://apps.apple.com/app/sideshore/id6820650870" data-store="ios"><small>Download on the</small><span>App Store</span></a>
+        <a class="store store-mac secondary" href="https://apps.apple.com/app/sideshore/id6820650870?platform=mac" data-store="mac"><small>Download on the</small><span>Mac App Store</span></a>
       </div>
       <p class="cta-note muted">Free · No account · No ads · One purchase across iPhone, iPad and Mac</p>
     </div>
@@ -355,11 +354,10 @@ footer p { margin:0; max-width:52em; }
 "use strict";
 // ---------------------------------------------------------------------------------------------
 // Store links. Sideshore is a universal purchase: one Apple ID for iOS, iPadOS and macOS.
-// TODO(G-7): replace with the Apple ID from App Store Connect (App Information ▸ Apple ID).
-const APP_ID = "0000000000";
+const APP_STORE_URL = "https://apps.apple.com/app/sideshore/id6820650870";
 const STORE = {
-  ios: `https://apps.apple.com/app/id${APP_ID}`,
-  mac: `https://apps.apple.com/app/id${APP_ID}?platform=mac`,
+  ios: APP_STORE_URL,
+  mac: `${APP_STORE_URL}?platform=mac`,
 };
 
 function detectPlatform() {
