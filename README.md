@@ -8,6 +8,6 @@ The public website for [Sideshore](https://jctec.github.io/sideshore-site/), a w
 
 Plain static HTML, served by GitHub Pages from `main` at the repo root. There is no build step.
 
-**Don't edit here.** The source lives in the private app repo (`Marketing/site`, `Marketing/privacy`) and is mirrored by `Scripts/sync-public-site.sh`; edits made here are overwritten on the next sync.
+This repo is the source of truth for the site: edit the pages here, and pushing to `main` publishes them.
 
 © 2026 Juan Carlos Estévez Rodríguez (JCTec). Screenshots and icon are not licensed for reuse.
